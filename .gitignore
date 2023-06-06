@@ -1,0 +1,6 @@
+bin
+cmake-build-debug
+lib
+.idea
+Assets/vd.mp4
+Assets/out.txt
