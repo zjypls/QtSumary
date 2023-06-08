@@ -4,10 +4,10 @@
 ![MediaPlayer](Assets/Shots/MediaPlayer.png)
 
 ### Snake:
-![Snake](Assets/Shots/Snake.png)
+![Snake](Assets/Shots/Snake.gif)
 
 ### File:
 ![File](Assets/Shots/File.png)
 
 ### Tetris:
-![Tetris](Assets/Shots/Tetris.png)
+![Tetris](Assets/Shots/Tetris.gif)
