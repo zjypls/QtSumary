@@ -61,10 +61,10 @@ struct zShape{
 				pos[0]={3,0};pos[1]={4,0};pos[2]={3,1};pos[3]={4,1};
 				break;
 			case zShapeType::eT:
-				pos[0]={3,0};pos[1]={2,1};pos[2]={3,1};pos[3]={4,1};
+				pos[0]={3,0};pos[1]={3,1};pos[2]={2,1};pos[3]={4,1};
 				break;
 			case zShapeType::eS:
-				pos[0]={3,0};pos[1]={4,0};pos[2]={2,1};pos[3]={3,1};
+				pos[0]={4,0};pos[1]={3,0};pos[2]={2,1};pos[3]={3,1};
 				break;
 			case zShapeType::eZ:
 				pos[0]={2,0};pos[1]={3,0};pos[2]={3,1};pos[3]={4,1};
@@ -73,7 +73,7 @@ struct zShape{
 				pos[0]={2,0};pos[1]={2,1};pos[2]={3,1};pos[3]={4,1};
 				break;
 			case zShapeType::eL:
-				pos[0]={4,0};pos[1]={2,1};pos[2]={3,1};pos[3]={4,1};
+				pos[0]={4,0};pos[1]={4,1};pos[2]={3,1};pos[3]={2,1};
 				break;
 			default:
 				throw std::runtime_error("zShapeType error");
@@ -84,16 +84,14 @@ struct zShape{
 			painter->drawRect(po.x*blockSize+distance,po.y*blockSize+distance,blockSize-distance,blockSize-distance);
 
 	}
-	void Rotate(){
-		//Todo : fix rotate
-		return;
+	void Rotate(short board[column][row]){
 		if(Type==zShapeType::eO)
 			return;
 		static ivec2 temp[4]{};
 		std::copy(pos,pos+4,temp);
 		for (auto & po : temp){
-			po+=((~(po-pos[rotateBase]))*ivec2(1,-1));
-			if(po.x<0||po.x>=column||po.y<0||po.y>=row)
+			po=pos[rotateBase]+((~(po-pos[rotateBase]))*ivec2(1,-1));
+			if(po.x<0||po.x>=column||po.y<0||po.y>=row||board[po.x][po.y]==full)
 				return;
 		}
 		std::copy(temp,temp+4,pos);
