@@ -8,13 +8,13 @@
 #include <QVector2D>
 #include <QVector>
 #include <QPainter>
-constexpr short empty=0;
-constexpr short full=1;
-constexpr int rotateBase=1;
-constexpr int column = 10;
-constexpr int row = 20;
-constexpr int blockSize = 30;
-constexpr int distance = 3;
+constexpr short Empty=0;
+constexpr short Full=1;
+constexpr int RotateBaseIndex=1;
+constexpr int Colums = 10;
+constexpr int Rows = 20;
+constexpr int BlockSize = 30;
+constexpr int Distance = 3;
 
 struct ivec2{
 	int x,y;
@@ -81,27 +81,27 @@ struct zShape{
 	}
     void Draw(QPainter* painter,int offsetX=0,int offsetY=0){
         for (auto & po : pos)
-                painter->drawRect((po.x+offsetX)*blockSize+distance,(po.y+offsetY)*blockSize+distance,blockSize-distance,blockSize-distance);
+                painter->drawRect((po.x+offsetX)*BlockSize+Distance,(po.y+offsetY)*BlockSize+Distance,BlockSize-Distance,BlockSize-Distance);
 
 	}
-	void Rotate(short board[column][row]){
+    void Rotate(short board[Rows][Colums]){
 		if(Type==zShapeType::eO)
 			return;
 		static ivec2 temp[4]{};
 		std::copy(pos,pos+4,temp);
 		for (auto & po : temp){
-			po=pos[rotateBase]+((~(po-pos[rotateBase]))*ivec2(1,-1));
-			if(po.x<0||po.x>=column||po.y<0||po.y>=row||board[po.x][po.y]==full)
+            po=pos[RotateBaseIndex]+((~(po-pos[RotateBaseIndex]))*ivec2(1,-1));
+            if(po.x<0||po.x>=Colums||po.y<0||po.y>=Rows||board[po.x][po.y]==Full)
 				return;
 		}
 		std::copy(temp,temp+4,pos);
 	}
-	void Move(int dir,short status[column][row]){
+    void Move(int dir,short status[Rows][Colums]){
 		static ivec2 temp[4]{};
 		std::copy(pos,pos+4,temp);
 		for (auto & po : temp){
 			po.x+=dir;
-			if(po.x<0||po.x>=column||status[po.x][po.y]==full)
+            if(po.x<0||po.x>=Colums||status[po.y][po.x]==Full)
 				return;
 		}
 		std::copy(temp,temp+4,pos);
@@ -125,10 +125,10 @@ public:
 protected:
 	void paintEvent(QPaintEvent *event) override;
 	void keyPressEvent(QKeyEvent *event) override;
-	bool TryFall();
+    bool TryFall();
 	void CheckDelete();
 private:
-	short status[column][row]{};
+    short Board[Rows][Colums]{};
 	QPainter* painter;
     zShape shape{zShape::zShapeType::eI},preViewShape;
 };

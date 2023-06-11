@@ -8,19 +8,20 @@
 #include <Qmessagebox>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QTime>
 #include "Tetris.h"
 static QRandomGenerator* generator=QRandomGenerator::global();
 
 bool zTetris::GameOver=false;
 zTetris::zTetris(QWidget *parent) : QWidget(parent){
-    this->resize((column+5) * (blockSize)+distance, row * (blockSize)+distance);
+    this->resize((Colums+5) * (BlockSize)+Distance, Rows * (BlockSize)+Distance);
 
     //Debug
     if(0){
         auto* editLine=new QLineEdit(this);
-        editLine->move((column+1)*blockSize+distance,5*blockSize+distance);
+        editLine->move((Colums+1)*BlockSize+Distance,5*BlockSize+Distance);
         auto* pushButton=new QPushButton("Change",this);
-        pushButton->move((column+1)*blockSize+distance,6*blockSize+distance);
+        pushButton->move((Colums+1)*BlockSize+Distance,6*BlockSize+Distance);
         connect(pushButton,&QPushButton::clicked,[this,pushButton,editLine](){
             int type=0;
             bool isOk=false;
@@ -31,7 +32,7 @@ zTetris::zTetris(QWidget *parent) : QWidget(parent){
         });
     }
 
-    memset(status,empty,sizeof(status));
+    memset(Board,Empty,sizeof(Board));
 	painter=new QPainter();
 	shape=zShape::GenerateShape();
 	static auto* PainterTimer=new QTimer(this);
@@ -39,7 +40,7 @@ zTetris::zTetris(QWidget *parent) : QWidget(parent){
     connect(PainterTimer,&QTimer::timeout,[this](){
         if(!zTetris::IsGameOver())
             if(!zTetris::IsGameOver()&&!TryFall()){
-                if(shape.pos[rotateBase].y<2){
+                if(shape.pos[RotateBaseIndex].y<2){
                     zTetris::SetIsGameOver();
                     QMessageBox::information(nullptr,"Message","GameOver");
                 }else{
@@ -63,94 +64,98 @@ void zTetris::paintEvent(QPaintEvent *event) {
 	painter->begin(this);
 	painter->setPen(Qt::red);
 	painter->setBrush(Qt::red);
-	QWidget::paintEvent(event);
-	shape.Draw(painter);
-	for (int i = 0; i < column; ++i) {
-		for (int j = 0; j < row; ++j) {
-			if (status[i][j]) {
-				painter->drawRect(i * blockSize+distance, j * blockSize+distance, blockSize-distance, blockSize-distance);
+    QWidget::paintEvent(event);
+    shape.Draw(painter);
+    for (int i = 0; i < Colums; ++i) {
+        for (int j = 0; j < Rows; ++j) {
+            if (Board[j][i]) {
+                painter->drawRect(i * BlockSize+Distance, j * BlockSize+Distance, BlockSize-Distance, BlockSize-Distance);
 			}
 		}
 	}
     painter->setPen(Qt::green);
-    painter->drawLine(column*(blockSize)+distance,0,column*(blockSize)+distance,height());
+    painter->drawLine(Colums*(BlockSize)+Distance,0,Colums*(BlockSize)+Distance,height());
     painter->setBrush(Qt::green);
-    preViewShape.Draw(painter,column-1,1);
+    preViewShape.Draw(painter,Colums-1,1);
 	painter->end();
 }
 
 
 
 void zTetris::keyPressEvent(QKeyEvent *event) {
-	QWidget::keyPressEvent(event);
-	switch (event->key()) {
-		case Qt::Key_W:
-		case Qt::Key_Up:
-			shape.Rotate(status);
-			break;
-		case Qt::Key_A:
-		case Qt::Key_Left:
-			shape.Move(-1, status);
-			break;
-		case Qt::Key_D:
-		case Qt::Key_Right:
-			shape.Move(1, status);
-			break;
-		case Qt::Key_S:
-		case Qt::Key_Down:
-			TryFall();
-			break;
-		case Qt::Key_Space:
-			while(TryFall());
-			break;
-	}
+    QWidget::keyPressEvent(event);
+    switch (event->key()) {
+        case Qt::Key_W:
+        case Qt::Key_Up:
+        shape.Rotate(Board);
+            break;
+        case Qt::Key_A:
+        case Qt::Key_Left:
+            shape.Move(-1, Board);
+            break;
+        case Qt::Key_D:
+        case Qt::Key_Right:
+            shape.Move(1, Board);
+            break;
+        case Qt::Key_S:
+        case Qt::Key_Down:
+            TryFall();
+            break;
+        case Qt::Key_Space:
+            while(TryFall());
+            break;
+    }
 	update();
 }
 
 bool zTetris::TryFall() {
 	static ivec2 pos[4];
-	std::copy(shape.pos,shape.pos+4,pos);
-	for(auto & po : pos) {
-		po.y++;
-		if(po.y>=row||status[po.x][po.y]==full){
-			for(auto & p : shape.pos) {
-				status[p.x][p.y]=full;
-			}
-			return false;
-		}
-	}
+    std::copy(shape.pos,shape.pos+4,pos);
+    for(auto & po : pos) {
+        po.y++;
+            if(po.y>=Rows||Board[po.y][po.x]==Full){
+            for(auto & p : shape.pos) {
+                Board[p.y][p.x]=Full;
+            }
+            return false;
+        }
+    }
 	std::copy(pos,pos+4,shape.pos);
 	return true;
 }
 
 void zTetris::CheckDelete() {
-    int top=0;
-    for (int i = row-1; i>=top; --i) {
-        int nums=0;
-        for(int j=0;j<column;++j){
-            if(i<=0||status[j][i]==empty){
+    int deleteCount=0;
+    unsigned int states=0;
+    for (int i=0;i<Rows;++i) {
+        bool IsFull=true;
+        for(auto&block:Board[i]){
+            if(block==Empty){
+                IsFull=false;
                 break;
-            }else if(j==column-1){
-                ++nums;
-                j=0;
-                --i;
             }
         }
-        if(nums>0){
-            i+=nums;
-            for (int j = i; j >=nums+top; --j) {
-				for (auto & statu : status) {
-                    statu[j]=statu[j-nums];
-				}
-			}
-            top+=nums;
-		}
-	}
-    for(int j=top-1;j>=0;--j){
-        for(auto&statu:status){
-            statu[j]=empty;
+        if(IsFull){
+            std::memset(Board[i],0,sizeof(Board[i]));
+            ++deleteCount;
+            states|=(1u<<i);
         }
     }
+    int ptr1=-1,ptr2=-1;
+    for(int i=Rows-1;i>=0;--i){
+        if((1u<<i)&states){
+            ptr1=i;
+            ptr2=i-1;
+            break;
+        }
+    }
+    for(;ptr2>=deleteCount;--ptr2){
+        if((!((1<<ptr2)&states))){
+            std::swap_ranges(Board[ptr1],Board[ptr1]+Colums,Board[ptr2]);
+            --ptr1;
+        }
+    }
+    std::memset(Board,0,sizeof(short)*deleteCount*Colums);
 
 }
 
