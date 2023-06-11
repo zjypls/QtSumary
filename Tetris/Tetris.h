@@ -13,8 +13,8 @@ constexpr short full=1;
 constexpr int rotateBase=1;
 constexpr int column = 10;
 constexpr int row = 20;
-constexpr int blockSize = 40;
-constexpr int distance = 4;
+constexpr int blockSize = 30;
+constexpr int distance = 3;
 
 struct ivec2{
 	int x,y;
@@ -79,9 +79,9 @@ struct zShape{
 				throw std::runtime_error("zShapeType error");
 		}
 	}
-	void Draw(QPainter* painter){
-		for (auto & po : pos)
-			painter->drawRect(po.x*blockSize+distance,po.y*blockSize+distance,blockSize-distance,blockSize-distance);
+    void Draw(QPainter* painter,int offsetX=0,int offsetY=0){
+        for (auto & po : pos)
+                painter->drawRect((po.x+offsetX)*blockSize+distance,(po.y+offsetY)*blockSize+distance,blockSize-distance,blockSize-distance);
 
 	}
 	void Rotate(short board[column][row]){
@@ -116,8 +116,11 @@ namespace test{
 }
 
 class zTetris:public QWidget {
+    static bool GameOver;
 public:
 	explicit zTetris(QWidget *parent = nullptr);
+    static inline bool IsGameOver(){return GameOver;}
+    static inline void SetIsGameOver(bool res=true){GameOver=true;}
 	~zTetris() override;
 protected:
 	void paintEvent(QPaintEvent *event) override;
@@ -127,7 +130,7 @@ protected:
 private:
 	short status[column][row]{};
 	QPainter* painter;
-	zShape shape{zShape::zShapeType::eI};
+    zShape shape{zShape::zShapeType::eI},preViewShape;
 };
 
 

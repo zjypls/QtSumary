@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.24)
 project(QVulkan)
 
 file(GLOB srcs *.h *.cpp)

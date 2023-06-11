@@ -5,19 +5,31 @@
 #include <QTimer>
 #include <QKeyEvent>
 #include <QRandomGenerator>
+#include <Qmessagebox>
 #include "Tetris.h"
 static QRandomGenerator* generator=QRandomGenerator::global();
+
+bool zTetris::GameOver=false;
 zTetris::zTetris(QWidget *parent) : QWidget(parent){
-	this->resize(column * (blockSize)+distance, row * (blockSize)+distance);
+    this->resize((column+5) * (blockSize)+distance, row * (blockSize)+distance);
 	memset(status,empty,sizeof(status));
 	painter=new QPainter();
 	shape=zShape::GenerateShape();
 	static auto* PainterTimer=new QTimer(this);
-	connect(PainterTimer,&QTimer::timeout,[this](){
-		if(!TryFall()){
-			CheckDelete();
-			shape=zShape::GenerateShape();
-		}
+    preViewShape=zShape::GenerateShape();
+    connect(PainterTimer,&QTimer::timeout,[this](){
+        if(!zTetris::IsGameOver())
+            if(!zTetris::IsGameOver()&&!TryFall()){
+                if(shape.pos[rotateBase].y<2){
+                    zTetris::SetIsGameOver();
+                    QMessageBox::information(nullptr,"Message","GameOver");
+                }else{
+                    CheckDelete();
+                    shape=preViewShape;
+                    preViewShape=zShape::GenerateShape();
+
+                }
+            }
 		update();
 	});
 	PainterTimer->start(500);
@@ -41,6 +53,10 @@ void zTetris::paintEvent(QPaintEvent *event) {
 			}
 		}
 	}
+    painter->setPen(Qt::green);
+    painter->drawLine(column*(blockSize)+distance,0,column*(blockSize)+distance,height());
+    painter->setBrush(Qt::green);
+    preViewShape.Draw(painter,column-1,1);
 	painter->end();
 }
 
