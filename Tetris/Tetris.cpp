@@ -6,13 +6,32 @@
 #include <QKeyEvent>
 #include <QRandomGenerator>
 #include <Qmessagebox>
+#include <QLineEdit>
+#include <QPushButton>
 #include "Tetris.h"
 static QRandomGenerator* generator=QRandomGenerator::global();
 
 bool zTetris::GameOver=false;
 zTetris::zTetris(QWidget *parent) : QWidget(parent){
     this->resize((column+5) * (blockSize)+distance, row * (blockSize)+distance);
-	memset(status,empty,sizeof(status));
+
+    //Debug
+    if(0){
+        auto* editLine=new QLineEdit(this);
+        editLine->move((column+1)*blockSize+distance,5*blockSize+distance);
+        auto* pushButton=new QPushButton("Change",this);
+        pushButton->move((column+1)*blockSize+distance,6*blockSize+distance);
+        connect(pushButton,&QPushButton::clicked,[this,pushButton,editLine](){
+            int type=0;
+            bool isOk=false;
+            type=editLine->text().toInt(&isOk);
+            if(isOk){
+                preViewShape=zShape(zShape::zShapeType(type%7));
+            }
+        });
+    }
+
+    memset(status,empty,sizeof(status));
 	painter=new QPainter();
 	shape=zShape::GenerateShape();
 	static auto* PainterTimer=new QTimer(this);
@@ -105,30 +124,38 @@ bool zTetris::TryFall() {
 }
 
 void zTetris::CheckDelete() {
-	for (int i = 0; i < row; ++i) {
-		bool full=true;
-		for (auto & statu : status) {
-			if(statu[i]==empty){
-				full=false;
-				break;
-			}
-		}
-		if(full){
-			for (auto & statu : status) {
-				statu[i]=empty;
-			}
-			for (int j = i; j > 0; --j) {
+    int top=0;
+    for (int i = row-1; i>=top; --i) {
+        int nums=0;
+        for(int j=0;j<column;++j){
+            if(i<=0||status[j][i]==empty){
+                break;
+            }else if(j==column-1){
+                ++nums;
+                j=0;
+                --i;
+            }
+        }
+        if(nums>0){
+            i+=nums;
+            for (int j = i; j >=nums+top; --j) {
 				for (auto & statu : status) {
-					statu[j]=statu[j-1];
+                    statu[j]=statu[j-nums];
 				}
 			}
+            top+=nums;
 		}
 	}
+    for(int j=top-1;j>=0;--j){
+        for(auto&statu:status){
+            statu[j]=empty;
+        }
+    }
 
 }
 
 zShape zShape::GenerateShape() {
-	auto type=static_cast<zShapeType>(generator->bounded(0,6));
+    auto type=static_cast<zShapeType>(generator->bounded(0,6));
 	//qDebug()<<test::shapeTypeToString(type);
 	return zShape(type);
 }
